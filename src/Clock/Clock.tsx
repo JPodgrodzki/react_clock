@@ -9,14 +9,14 @@ function getRandomName(): string {
 type State = {
   today: Date;
   clockName: string;
-  timerId: number | undefined;
+  timerIds: number[];
 };
 
 export class Clock extends React.Component<{ clockName: string }, State> {
   state: State = {
     today: new Date(),
     clockName: 'Clock-0',
-    timerId: undefined,
+    timerIds: [],
   };
 
   componentDidMount() {
@@ -30,20 +30,15 @@ export class Clock extends React.Component<{ clockName: string }, State> {
       console.log(this.state.today.toUTCString().slice(-12, -4));
     }, 1000);
 
-    this.setState({ timerId: timeTimerId });
+    this.setState({ timerIds: [newTimerId, timeTimerId] });
 
-    document.addEventListener('contextmenu', event => {
-      event.preventDefault();
-      clearInterval(newTimerId);
-      clearInterval(timeTimerId);
-      this.setState({ clockName: 'Clock-0', today: new Date() });
-    });
+    document.addEventListener('contextmenu', this.handleContextMenu);
   }
 
   componentWillUnmount() {
-    if (this.state.timerId) {
-      clearInterval(this.state.timerId);
-    }
+    this.state.timerIds.forEach(timerId => clearInterval(timerId));
+
+    document.removeEventListener('contextmenu', this.handleContextMenu);
   }
 
   componentDidUpdate(prevState: State) {
@@ -54,6 +49,11 @@ export class Clock extends React.Component<{ clockName: string }, State> {
       );
     }
   }
+
+  handleContextMenu = (event: MouseEvent) => {
+    event.preventDefault();
+    this.setState({ clockName: 'Clock-0', today: new Date() });
+  };
 
   render() {
     const { today, clockName } = this.state;
